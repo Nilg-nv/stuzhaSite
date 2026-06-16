@@ -21,18 +21,12 @@
 		WebAssembly.instantiateStreaming(fetch("wasm.wasm"), go.importObject).then((result) => {
 			mod = result.module;
 			inst = result.instance;
-			// document.getElementById("runButton").disabled = false;
-		}).catch((err) => {
-			console.error(err);
-		});
-
-		async function run() {
 			console.clear();
 			await go.run(inst);
 			inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
-		}
-
-		run();
+		}).catch((err) => {
+			console.error(err);
+		});
 	</script>
 </body>
 
