@@ -27,7 +27,7 @@
 			console.error(err);
 		});
 
-		async funtion run() {
+		async function run() {
 			await go.run(inst);
 			inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
 		}
