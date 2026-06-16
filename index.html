@@ -31,6 +31,8 @@
 			await go.run(inst);
 			inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
 		}
+
+		run();
 	</script>
 </body>
 
