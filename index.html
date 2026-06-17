@@ -1,37 +1,125 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-	<meta charset="utf-8">
-	<title>stuzha</title>
+    <meta charset="UTF-8">
+    <title>stuzha</title>
+    <style>
+
+        .containerLoader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2vw;
+            margin: 0 auto;
+        }
+
+        .squareLoader {
+            width: 15vw;
+            height: 15vw;
+            border-radius: 2vw;
+            animation: animationSquareLoader 2s ease-in-out infinite;
+        }
+
+        .square1Loader { background: #0E4D3B; animation-delay: 0s; }
+        .square2Loader { background: #1A7A5A; animation-delay: 0.5s; } 
+        .square3Loader { background: #48A88A; animation-delay: 1s; }
+        .square4Loader { background: #A3E4D4; animation-delay: 1.5s; }
+
+        @keyframes animationSquareLoader {
+            0%   { opacity: 1; }
+            20%  { opacity: 0; }
+            40%  { opacity: 0; }
+            60%  { opacity: 1; }
+            100% { opacity: 1; }
+        }
+
+        .errorLoad {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9998; 
+            text-align: center;
+            font-size: 5vw;
+            color: red;
+            font-weight: bold;
+            width: 100%;
+            pointer-events: none;
+        }
+        
+        .hidden {
+            display: none !important; 
+        }
+
+    </style>
 </head>
-
 <body>
-	<script src="wasm_exec.js"></script>
-	<script>
-		if (!WebAssembly.instantiateStreaming) { // polyfill
-			WebAssembly.instantiateStreaming = async (resp, importObject) => {
-				const source = await (await resp).arrayBuffer();
-				return await WebAssembly.instantiate(source, importObject);
-			};
-		}
+    <div class="containerLoader" id="loader">
+        <div class="squareLoader square1Loader"></div>
+        <div class="squareLoader square2Loader"></div>
+        <div class="squareLoader square3Loader"></div>
+        <div class="squareLoader square4Loader"></div>
+    </div>
 
-		const go = new Go();
-		let mod, inst;
-		WebAssembly.instantiateStreaming(fetch("wasm.wasm"), go.importObject).then((result) => {
-			mod = result.module;
-			inst = result.instance;
-			console.clear();
-			run()
-		}).catch((err) => {
-			console.error(err);
-		});
+    <div class="errorLoad hidden" id="errorText">
+        Load error
+        <br> 
+        Check the console
+    </div>
 
-		async function run() {
-			await go.run(inst);
-			inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
-		}
-	</script>
+    <script src="wasm_exec.js"></script>
+    <script>
+        console.clear();
+        function offLoader() {
+            document.getElementById("loader").classList.add("hidden");
+        }
+        
+        function onError() {
+            offLoader();
+            document.getElementById("errorText").classList.remove("hidden");
+        }
+        
+        async function loadWasm() {
+            if (!WebAssembly.instantiateStreaming) {
+                onError();
+                console.error('WebAssembly.instantiateStreaming is not supported');
+                return;
+            }
+            
+            if (typeof Go === 'undefined') {
+                onError();
+                console.error('Go is not defined');
+                return;
+            }
+            
+            const go = new Go();
+            
+            try {
+                const response = await fetch("wasm.wasm");
+                
+                if (!response.ok) {
+                    onError();
+                    console.error('Failed to load wasm.wasm');
+                    return;
+                }
+                
+                const result = await WebAssembly.instantiateStreaming(response, go.importObject);
+                await go.run(result.instance);
+                
+                offLoader();
+            } catch(err) {
+                onError();
+                console.error('Error:', err);
+            }
+           
+        }
+        
+        loadWasm();
+        
+    </script>
 </body>
-
 </html>
