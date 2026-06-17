@@ -108,9 +108,10 @@
                 }
                 
                 const result = await WebAssembly.instantiateStreaming(response, go.importObject);
-                await go.run(result.instance);
                 
                 offLoader();
+                await go.run(result.instance);
+                
             } catch(err) {
                 onError();
                 console.error('Error:', err);
